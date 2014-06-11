@@ -341,7 +341,8 @@ public class BTree {
                              startIndex = retInt[7];
                          }
 		}
-                retInt[7] = startIndex;
+
+                retInt[7] = startIndex; /* last unit store index */
                 return retInt;
 	}
 }
