@@ -24,6 +24,25 @@ LOGDIR=`cd "$bin/../log"; pwd`
 rm $LOGDIR/*.log
 cat /dev/null >$LOGDIR/lion.log
 
+if [ -e "$bin/cheetah-config.sh" ]; then
+  . "$bin"/cheetah-config.sh
+fi
+
+
+cheetahHost=(${CHEETAH_HOST//:/ })
+hostSequence=-1
+hostNumber="${#cheetahHost[@]}"
+for x in "${cheetahHost[@]}";do
+    portHost=(${x//@/ })
+    portNumber="${portHost[0]}"
+    hostAddr="${portHost[1]}"
+    #echo $hostSequence
+    (( hostSequence += 1 ))
+    echo "export PORT_NUMBER=${portNumber}" > $bin/../run/cheetah-port.sh
+    echo "export CHEETAH_HOST_ID=${hostSequence}" >> $bin/../run/cheetah-port.sh
+    echo "export CHEETAH_HOST_NUMBER=${hostNumber}" >> $bin/../run/cheetah-port.sh
+done
+
 nohup $bin/cheetah.sh -p 8000 -h 0 >$LOGDIR/cheetah_0.log 2>&1 &
 nohup $bin/cheetah.sh -p 8001 -h 1 >$LOGDIR/cheetah_1.log 2>&1 &
 nohup $bin/cheetah.sh -p 8002 -h 2 >$LOGDIR/cheetah_2.log 2>&1 &
