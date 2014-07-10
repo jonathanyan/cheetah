@@ -1,0 +1,1 @@
+wget -qO- 127.0.0.1:8081/dumpTree@0 |cat

@@ -1,0 +1,28 @@
+#/bin/ksh
+rm -rf ../log/fox.log
+count=1000
+date
+while [[ $count -gt 900 ]]; do
+   ((count -= 1 ))
+   ((count1 = count + 1 ))
+   ((count2 = count + 2 ))
+   ((count3 = count + 3 ))
+   ((count4 = count + 4 ))
+   ((count5 = count + 5 ))
+   ((count6 = count + 6 ))
+   ((count7 = count + 7 ))
+   ((count8 = count + 8 ))
+   ((count9 = count + 9 ))
+   foxget ${count} >>../log/fox.log 2>&1 &
+   foxinc 3 >>../log/fox.log 2>&1 &
+   foxinc ${count1} >>../log/fox.log 2>&1 &
+   foxinc ${count2} >>../log/fox.log 2>&1 &
+   foxinc ${count3} >>../log/fox.log 2>&1 &
+   foxinc 3 >>../log/fox.log 2>&1 &
+   foxdec ${count1} >>../log/fox.log 2>&1 &
+   foxdec ${count2} >>../log/fox.log 2>&1 &
+   foxdec ${count3} >>../log/fox.log 2>&1 &
+   foxget ${count9} >>../log/fox.log 2>&1 &
+   sleep 0.5 
+done
+date

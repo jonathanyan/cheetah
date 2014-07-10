@@ -1,0 +1,9 @@
+10K 1 sec
+100K 2 sec
+1M 4 sec
+10M 29 sec ( data 266MB)
+
+10K data, 10 thread
+100X10 requirement,i
+sleep 0.3 seconds every 10 requirements
+Finished in 20 seconds ( not 0.3*100=30 )

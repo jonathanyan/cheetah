@@ -1,0 +1,7 @@
+if [ ${#} -ne 1 ]
+then
+fruitid=3
+else
+fruitid=$1
+fi
+wget -qO- 127.0.0.1:8081/getDemand@${fruitid} |cat
