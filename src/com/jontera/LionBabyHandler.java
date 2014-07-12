@@ -15,13 +15,14 @@ public class LionBabyHandler extends ChannelInboundHandlerAdapter {
     final private int cheetahThreadNumber;
     private ByteBuf buf;
     private final NonBlockingHashMap<Integer, Packet> lionHandleCache;
-        private static int[] noReturnCommandCountByCheetah;
+    private static int[] noReturnCommandCountByCheetah;
     private int sleepMilliSecond;
     private static int retryMilliSecond;
 
     LionBabyHandler(NonBlockingHashMap<Integer, Packet> lionHandleCache,
             int hostId, int threadId, int cheetahThreadNumber,
-            int[] noReturnCommandCountByCheetah_s, int sleepMilliSecond, int retryMilliSecond_s) {
+            int[] noReturnCommandCountByCheetah_s, int sleepMilliSecond,
+            int retryMilliSecond_s) {
         super();
         this.lionHandleCache = lionHandleCache;
         this.hostId = hostId;
@@ -56,12 +57,16 @@ public class LionBabyHandler extends ChannelInboundHandlerAdapter {
 
         final int index = this.hostId * this.cheetahThreadNumber
                 + this.threadId;
-        for (int i = 0; i < retryMilliSecond/sleepMilliSecond/2; i++) {
+        for (int i = 0; i < retryMilliSecond / sleepMilliSecond / 2; i++) {
             if (!lionHandleCache.containsKey(new Integer(index))) {
 
                 lionHandleCache.put(new Integer(index), packet);
                 break;
             } else {
+                if (i == retryMilliSecond / sleepMilliSecond / 2 - 1) {
+                    System.out.println("RESPONSE_BUFFER_JAM at seq "
+                            + packet.sequenceNumber);
+                }
                 try {
                     Thread.sleep(sleepMilliSecond);
                 } catch (Exception e) {
