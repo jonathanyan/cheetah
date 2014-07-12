@@ -16,18 +16,16 @@
 # limitations under the License.
 
 
-# Start all lion daemons.  Run this on mast node.
+# Prepare script.  Run this on mast node.
 
-bin=`dirname "$0"`
-bin=`cd "$bin"; pwd`
-LOGDIR=`cd "$bin/../log"; pwd`
-rm $LOGDIR/*.log
-cat /dev/null >$LOGDIR/lion.log
+sbin=`dirname "$0"`
+sbin=`cd "$sbin"; pwd`
 
-if [ -e "$bin/cheetah-config.sh" ]; then
-  . "$bin"/cheetah-config.sh
+if [ -e "$sbin/cheetah-config.sh" ]; then
+  . "$sbin"/cheetah-config.sh
 fi
 
+cat /dev/null > $sbin/../run/shiptocheetah.sh
 
 cheetahHost=(${CHEETAH_HOST//:/ })
 hostSequence=-1
@@ -38,16 +36,12 @@ for x in "${cheetahHost[@]}";do
     hostAddr="${portHost[1]}"
     #echo $hostSequence
     (( hostSequence += 1 ))
-    echo "export PORT_NUMBER=${portNumber}" > $bin/../run/cheetah-port.sh
-    echo "export CHEETAH_HOST_ID=${hostSequence}" >> $bin/../run/cheetah-port.sh
-    echo "export CHEETAH_HOST_NUMBER=${hostNumber}" >> $bin/../run/cheetah-port.sh
+    echo "export PORT_NUMBER=${portNumber}" > $sbin/../run/cheetah-port.sh
+    echo "export CHEETAH_HOST_ID=${hostSequence}" >> $sbin/../run/cheetah-port.sh
+    echo "export CHEETAH_HOST_NUMBER=${hostNumber}" >> $sbin/../run/cheetah-port.sh
+    remoteCheetahDir="cheetah_"${hostSequence}
+    rm -rf  /tmp/${remoteCheetahDir}
+    cp -r $sbin/../ /tmp/${remoteCheetahDir}
+    echo "scp -r /tmp/${remoteCheetahDir} $hostAddr:/tmp/" >>$sbin/../run/shiptocheetah.sh
+    #ssh $hostAddr "/tmp/${remoteCheetahDir}/cheetah.sh >/tmp/${remoteCheetahDir}/cheetah.log 2>&1 &"
 done
-
-nohup $bin/cheetah.sh -p 8000 -h 0 >$LOGDIR/cheetah_0.log 2>&1 &
-nohup $bin/cheetah.sh -p 8001 -h 1 >$LOGDIR/cheetah_1.log 2>&1 &
-nohup $bin/cheetah.sh -p 8002 -h 2 >$LOGDIR/cheetah_2.log 2>&1 &
-sleep 3
-nohup $bin/lion.sh >$LOGDIR/lion.log 2>&1 &
-tail -f $LOGDIR/lion.log
-
-

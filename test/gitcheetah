@@ -2,5 +2,4 @@ rm -rf ~/cheetah
 cd ~/
 svn export https://github.com/jonathanyan/cheetah/trunk cheetah
 cp ~/lib/* ~/cheetah/lib/
-rm ~/cheetah/lib/README
 chmod -R 755 cheetah 

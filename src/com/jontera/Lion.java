@@ -99,8 +99,8 @@ public class Lion implements Runnable {
                                     lionCache, lionHandleCache,
                                     threadHostIndex, isActiveByCheetah,
                                     isActiveLion, requestTimeStamp,
-                                    requestHostIndex, requestTimeLowerLimit,
-                                    sleepMilliSecond));
+                                    requestHostIndex, retryMilliSecond,
+                                    sleepMilliSecond, requestTimeLowerLimit));
 
             Channel ch = b.bind(httpPort).sync().channel();
 
@@ -213,7 +213,7 @@ public class Lion implements Runnable {
                                 new LionBabyHandler(lionHandleCache, hostId,
                                         threadId, cheetahThreadNumber,
                                         noReturnCommandCountByCheetah,
-                                        sleepMilliSecond));
+                                        sleepMilliSecond, retryMilliSecond));
                     }
                 });
 

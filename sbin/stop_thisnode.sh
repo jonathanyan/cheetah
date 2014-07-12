@@ -18,10 +18,10 @@
 
 # Start all lion daemons.  Run this on mast node.
 
-bin=`dirname "$0"`
-bin=`cd "$bin"; pwd`
+sbin=`dirname "$0"`
+sbin=`cd "$sbin"; pwd`
 
-TMPDIR=${bin}/../run
+TMPDIR=${sbin}/../run
 ps -ef | grep ${USER} | grep 'java\|tail' | grep -v vi | grep -v http| grep -v grep | awk '{print "kill -9 " $2 }' > $TMPDIR/kill_all.ksh
 sh $TMPDIR/kill_all.ksh
 ps -ef | grep ${USER} | grep java

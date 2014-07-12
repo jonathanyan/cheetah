@@ -40,9 +40,10 @@ public class LionQueenHandler extends SimpleChannelInboundHandler<Object> {
     private static boolean[] isActiveLion;
     private static int[][] requestTimeStamp;
     private static int[] requestHostIndex;
-    private static int requestTimeLowerLimit;
+    private static int retryMilliSecond;
     private int httpSequenceNumber = 0;
     private int sleepMilliSecond;
+    private static int requestTimeLowerLimit;
     private long beginTime = 0, endTime = 0;
     final private static int MAX_USED_INTEGER = 1000000000;
 
@@ -52,8 +53,8 @@ public class LionQueenHandler extends SimpleChannelInboundHandler<Object> {
             NonBlockingHashMap<Integer, Packet> lionHandleCache_s,
             int[] threadHostIndex_s, boolean[] isActiveByCheetah_s,
             boolean[] isActiveLion_s, int[][] requestTimeStamp_s,
-            int[] requestHostIndex_s, int requestTimeLowerLimit_s,
-            int sleepMilliSecond) {
+            int[] requestHostIndex_s, int retryMilliSecond_s,
+            int sleepMilliSecond, int requestTimeLowerLimit_s) {
         // sequenceNumber = sequenceNumber_s;
         cheetahHostNumber = cheetahHostNumber_s;
         cheetahThreadNumber = cheetahThreadNumber_s;
@@ -64,8 +65,9 @@ public class LionQueenHandler extends SimpleChannelInboundHandler<Object> {
         isActiveLion = isActiveLion_s;
         requestTimeStamp = requestTimeStamp_s;
         requestHostIndex = requestHostIndex_s;
-        requestTimeLowerLimit = requestTimeLowerLimit_s;
+        retryMilliSecond = retryMilliSecond_s;
         this.sleepMilliSecond = sleepMilliSecond;
+        requestTimeLowerLimit =requestTimeLowerLimit_s;
     }
 
     @Override
@@ -173,7 +175,7 @@ public class LionQueenHandler extends SimpleChannelInboundHandler<Object> {
                             + packet.sequenceNumber);
                 if (httpSequenceNumber == packet.sequenceNumber) {
                     System.out
-                            .println("LionQueenHandler - Response : buf_index "
+                            .print("LionQueenHandler - Response : buf_index "
                                     + index
                                     + " seq  "
                                     + packet.sequenceNumber);
@@ -194,12 +196,12 @@ public class LionQueenHandler extends SimpleChannelInboundHandler<Object> {
                 iloop = 0;
                 index = hostSeq * cheetahThreadNumber;
                 retry++;
-                if (retry < 20) {
+                if (retry < retryMilliSecond/sleepMilliSecond) {
                     continue;
                 } else {
-                    System.out.println("Response Time out at host " + hostSeq
-                            + " seq  " + httpSequenceNumber + " in thread "
-                            + Thread.currentThread().getName());
+                    System.out.print("Response Time out at host " + hostSeq
+                            + " seq  " + httpSequenceNumber + " retry number "
+                            + retry + " " + retryMilliSecond + " " + sleepMilliSecond) ;
                     buf.append("Response Time out at seq  "
                             + httpSequenceNumber + (sequenceNumber - 1));
                     buf.append("\r\n");
@@ -246,7 +248,7 @@ public class LionQueenHandler extends SimpleChannelInboundHandler<Object> {
             }
             this.endTime = System.currentTimeMillis();
             String stringTime = "" + (int) (this.endTime - this.beginTime);
-            System.out.println("WALLTIME "
+            System.out.println(" WALLTIME "
                     + ("00000000" + stringTime).substring(stringTime.length()));
 
             appendDecoderResult(buf, request);

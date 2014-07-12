@@ -1,0 +1,12 @@
+fruitid=3
+demandvalue=888
+if [ ${#} -eq 2 ]
+then
+demandvalue=${1}
+fruitid=${2}
+fi
+if [ ${#} -eq 1 ]
+then
+demandvalue=${1}
+fi
+wget -qO- 127.0.0.1:8081/setDemand=${demandvalue}@${fruitid} |cat

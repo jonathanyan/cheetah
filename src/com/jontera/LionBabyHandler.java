@@ -15,13 +15,13 @@ public class LionBabyHandler extends ChannelInboundHandlerAdapter {
     final private int cheetahThreadNumber;
     private ByteBuf buf;
     private final NonBlockingHashMap<Integer, Packet> lionHandleCache;
-    private final static int retryTimes = 10;
-    private static int[] noReturnCommandCountByCheetah;
+        private static int[] noReturnCommandCountByCheetah;
     private int sleepMilliSecond;
+    private static int retryMilliSecond;
 
     LionBabyHandler(NonBlockingHashMap<Integer, Packet> lionHandleCache,
             int hostId, int threadId, int cheetahThreadNumber,
-            int[] noReturnCommandCountByCheetah_s, int sleepMilliSecond) {
+            int[] noReturnCommandCountByCheetah_s, int sleepMilliSecond, int retryMilliSecond_s) {
         super();
         this.lionHandleCache = lionHandleCache;
         this.hostId = hostId;
@@ -29,6 +29,7 @@ public class LionBabyHandler extends ChannelInboundHandlerAdapter {
         this.cheetahThreadNumber = cheetahThreadNumber;
         noReturnCommandCountByCheetah = noReturnCommandCountByCheetah_s;
         this.sleepMilliSecond = sleepMilliSecond;
+        retryMilliSecond = retryMilliSecond_s;
     }
 
     @Override
@@ -47,16 +48,15 @@ public class LionBabyHandler extends ChannelInboundHandlerAdapter {
 
         ByteBuf in = (ByteBuf) msg;
         Packet packet = new Packet(in);
-        System.out.println("LionCommandHandler " + packet.sequenceNumber
-                + " - " + packet.byteToString() + " @ "
-                + Thread.currentThread().getName());
+        System.out.println("LionBabyHandler - Response: "
+                + packet.byteToString() + " seq " + packet.sequenceNumber);
         noReturnCommandCountByCheetah[this.hostId]--;
         // packet.print();
         in.release();
 
         final int index = this.hostId * this.cheetahThreadNumber
                 + this.threadId;
-        for (int i = 0; i < retryTimes; i++) {
+        for (int i = 0; i < retryMilliSecond/sleepMilliSecond/2; i++) {
             if (!lionHandleCache.containsKey(new Integer(index))) {
 
                 lionHandleCache.put(new Integer(index), packet);

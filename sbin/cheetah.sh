@@ -16,20 +16,48 @@
 # limitations under the License.
 
 
-# Start lion daemons.  Run this on master node.
+# Start all cheetah daemons.  Run this on slave node.
+echo $PASSARG
+while [[ $# > 1 ]]
+do
+key="$1"
+shift
 
-bin=`dirname "$0"`
-bin=`cd "$bin"; pwd`
+case $key in
+    -p|--port)
+    CHEETAHPORT="$1"
+    shift
+    ;;
+    -h|--host)
+    CHEETAHHOST="$1"
+    shift
+    ;;
+    --default)
+    DEFAULT=YES
+    shift
+    ;;
+    *)
+            # unknown option
+    ;;
+esac
+done
 
-if [ -e "$bin/cheetah-config.sh" ]; then
-  . "$bin"/cheetah-config.sh
+sbin=`dirname "$0"`
+sbin=`cd "$sbin"; pwd`
+
+if [ -e "$sbin/cheetah-config.sh" ]; then
+  . "$sbin"/cheetah-config.sh
+  . "$sbin"/../run/cheetah-port.sh
 fi
 
-# start lion daemons
-lib=`cd "$bin"/../lib; ls`
+lib=`cd "$sbin"/../lib; ls`
 echo "LIB=" $lib
 libList=(${lib// / })
-CHEETAHCLASSPATH=$bin/../lib/${libList[0]}:$bin/../lib/${libList[1]}:$bin
-cd "$bin"
-java -classpath $CHEETAHCLASSPATH $LION_OPTS com.jontera.Lion 
+CHEETAHCLASSPATH=$sbin/../lib/${libList[0]}:$sbin/../lib/${libList[1]}:$sbin/../bin
+
+if [ "$PASSARG" = "0" ]; then
+cd "$sbin";java -classpath $CHEETAHCLASSPATH $CHEETAH_OPTS com.jontera.CheetahServer
+else
+cd "$sbin";java -classpath $CHEETAHCLASSPATH $CHEETAH_OPTS com.jontera.CheetahServer $CHEETAHPORT $CHEETAHHOST
+fi
 
