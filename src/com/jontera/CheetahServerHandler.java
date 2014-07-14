@@ -96,7 +96,7 @@ public class CheetahServerHandler extends ChannelInboundHandlerAdapter {
             return "NOT FOUND @key " + fruitId;
         } else {
             System.out.println("RECEIVE : " + commandHead + " -" + commandVar
-                    +  "-  @ " + fruitId);
+                    + "-  @ " + fruitId);
         }
 
         Method method = null;
@@ -157,33 +157,38 @@ public class CheetahServerHandler extends ChannelInboundHandlerAdapter {
         }
         String retLine;
         try {
-            String line = new String(buf, "US-ASCII");
-            String[] lineArray = line.split("\\@", -1);
-
-            int fruitId = Integer.parseInt(lineArray[1].trim());
-
-            mapKey = new Integer(hashVal.hashBucket(fruitId, cheetahTreeNumber));
-
-            if (hostId == this.hostId) {
-                if (!cheetahCache.containsKey(mapKey)) {
-                    retLine = new String("Not found " + fruitId);
-                } else {
-                    bTreeRoot = cheetahCache.get(mapKey);
-                    retLine = treeProcess(bTreeRoot, line);
-                }
+            if (commandType == 99) {
+                retLine = new String("beep");
             } else {
-                if (!secondaryCheetahCache.containsKey(mapKey)) {
-                    retLine = new String("Not found " + fruitId);
+                String line = new String(buf, "US-ASCII");
+                String[] lineArray = line.split("\\@", -1);
+
+                int fruitId = Integer.parseInt(lineArray[1].trim());
+
+                mapKey = new Integer(hashVal.hashBucket(fruitId,
+                        cheetahTreeNumber));
+
+                if (hostId == this.hostId) {
+                    if (!cheetahCache.containsKey(mapKey)) {
+                        retLine = new String("Not found " + fruitId);
+                    } else {
+                        bTreeRoot = cheetahCache.get(mapKey);
+                        retLine = treeProcess(bTreeRoot, line);
+                    }
                 } else {
-                    bTreeRoot = secondaryCheetahCache.get(mapKey);
-                    retLine = treeProcess(bTreeRoot, line);
+                    if (!secondaryCheetahCache.containsKey(mapKey)) {
+                        retLine = new String("Not found " + fruitId);
+                    } else {
+                        bTreeRoot = secondaryCheetahCache.get(mapKey);
+                        retLine = treeProcess(bTreeRoot, line);
+                    }
                 }
             }
 
             if (commandType < 100
                     && (hostId == this.hostId || is2ndCacheActive[0])) {
                 Packet packet = new Packet(sequenceNumber, (short) hostId,
-                        retLine);
+                        (byte) commandType, retLine);
                 packet.messageToByte(response);
                 return response;
             } else {

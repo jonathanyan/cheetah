@@ -14,7 +14,7 @@ public class LionQueenInitializer extends ChannelInitializer<SocketChannel> {
     private static NonBlockingHashMap<Integer, Packet> lionCache;
     private static NonBlockingHashMap<Integer, Packet> lionHandleCache;
     private static int[] threadHostIndex;
-    private static boolean[] isActiveByCheetah;
+    private static byte[] isActiveByCheetah;
     private static boolean[] isActiveLion;
     private static int[][] requestTimeStamp;
     private static int[] requestHostIndex;
@@ -30,9 +30,10 @@ public class LionQueenInitializer extends ChannelInitializer<SocketChannel> {
             int cheetahThreadNumber_s, int cheetahHostNumber_s,
             NonBlockingHashMap<Integer, Packet> lionCache_s,
             NonBlockingHashMap<Integer, Packet> lionHandleCache_s,
-            int[] threadHostIndex_s, boolean[] isActiveByCheetah_s,
+            int[] threadHostIndex_s, byte[] isActiveByCheetah_s,
             boolean[] isActiveLion_s, int[][] requestTimeStamp_s,
-            int[] requestHostIndex_s, int retryMilliSecond_s, int sleepMilliSecond, int requestTimeLowerLimit_s) {
+            int[] requestHostIndex_s, int retryMilliSecond_s,
+            int sleepMilliSecond, int requestTimeLowerLimit_s) {
         sequenceNumber = sequenceNumber_s;
         cheetahHostNumber = cheetahHostNumber_s;
         cheetahThreadNumber = cheetahThreadNumber_s;
@@ -55,6 +56,7 @@ public class LionQueenInitializer extends ChannelInitializer<SocketChannel> {
         p.addLast(new LionQueenHandler(sequenceNumber, cheetahThreadNumber,
                 cheetahHostNumber, lionCache, lionHandleCache, threadHostIndex,
                 isActiveByCheetah, isActiveLion, requestTimeStamp,
-                requestHostIndex, retryMilliSecond, sleepMilliSecond, requestTimeLowerLimit));
+                requestHostIndex, retryMilliSecond, sleepMilliSecond,
+                requestTimeLowerLimit));
     }
 }

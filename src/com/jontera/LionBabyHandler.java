@@ -15,22 +15,22 @@ public class LionBabyHandler extends ChannelInboundHandlerAdapter {
     final private int cheetahThreadNumber;
     private ByteBuf buf;
     private final NonBlockingHashMap<Integer, Packet> lionHandleCache;
-    private static int[] noReturnCommandCountByCheetah;
     private int sleepMilliSecond;
     private static int retryMilliSecond;
+    private static byte[] isActiveByCheetah;
 
     LionBabyHandler(NonBlockingHashMap<Integer, Packet> lionHandleCache,
             int hostId, int threadId, int cheetahThreadNumber,
-            int[] noReturnCommandCountByCheetah_s, int sleepMilliSecond,
-            int retryMilliSecond_s) {
+            int sleepMilliSecond, int retryMilliSecond_s,
+            byte[] isActiveByCheetah_s) {
         super();
         this.lionHandleCache = lionHandleCache;
         this.hostId = hostId;
         this.threadId = threadId;
         this.cheetahThreadNumber = cheetahThreadNumber;
-        noReturnCommandCountByCheetah = noReturnCommandCountByCheetah_s;
         this.sleepMilliSecond = sleepMilliSecond;
         retryMilliSecond = retryMilliSecond_s;
+        isActiveByCheetah = isActiveByCheetah_s;
     }
 
     @Override
@@ -51,21 +51,26 @@ public class LionBabyHandler extends ChannelInboundHandlerAdapter {
         Packet packet = new Packet(in);
         System.out.println("LionBabyHandler - Response: "
                 + packet.byteToString() + " seq " + packet.sequenceNumber);
-        noReturnCommandCountByCheetah[this.hostId]--;
         // packet.print();
         in.release();
 
+        if (packet.commandType == 99) {
+            isActiveByCheetah[packet.hostId] = 0;
+            return;
+        }
         final int index = this.hostId * this.cheetahThreadNumber
                 + this.threadId;
-        for (int i = 0; i < retryMilliSecond / sleepMilliSecond / 2; i++) {
+        for (int i = 0; i < retryMilliSecond / sleepMilliSecond * 2 / 3; i++) {
             if (!lionHandleCache.containsKey(new Integer(index))) {
 
                 lionHandleCache.put(new Integer(index), packet);
                 break;
             } else {
-                if (i == retryMilliSecond / sleepMilliSecond / 2 - 1) {
-                    System.out.println("RESPONSE_BUFFER_JAM at seq "
+                if (i == retryMilliSecond / sleepMilliSecond * 2 / 3 - 1) {
+                    System.out.println("RESPONSE_BUFFER_JAM replace with seq "
                             + packet.sequenceNumber);
+                    lionHandleCache.remove(new Integer(index));
+                    lionHandleCache.put(new Integer(index), packet);
                 }
                 try {
                     Thread.sleep(sleepMilliSecond);

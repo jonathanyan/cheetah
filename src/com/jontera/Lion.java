@@ -35,9 +35,7 @@ public class Lion implements Runnable {
     private static NonBlockingHashMap<Integer, Packet> lionCache;
     private static NonBlockingHashMap<Integer, Packet> lionHandleCache;
     private static int[] threadHostIndex;
-    private static int[] commandCountByCheetah;
-    private static int[] noReturnCommandCountByCheetah;
-    private static boolean[] isActiveByCheetah;
+    private static byte[] isActiveByCheetah;
     private static boolean[] isActiveLion = { true };
     private static int[][] requestTimeStamp;
     private static int[] requestHostIndex;
@@ -114,8 +112,36 @@ public class Lion implements Runnable {
         }
     }
 
+    public void sendLionKingCtrlCommand(int hostSeq, byte commandType) {
+        int k, index = 0;
+        try {
+            Packet packet = new Packet(ctrlSequenceNumber, (short) hostSeq,
+                    (byte) 100, (byte) 0);
+
+            for (k = 0; k < cheetahThreadNumber; k++) {
+                index = (threadHostIndex[hostSeq] + k + 1)
+                        % cheetahThreadNumber;
+                if (!lionCache.containsKey(new Integer(hostSeq
+                        * cheetahThreadNumber + index))) {
+                    threadHostIndex[hostSeq] = index;
+                    break;
+                }
+            }
+
+            if (k < cheetahThreadNumber) {
+                lionCache.put(
+                        new Integer(hostSeq * cheetahThreadNumber + index),
+                        packet);
+            } else {
+                System.out.println("Lion King Ctrl Command " + commandType
+                        + " host " + hostSeq + " seq " + ctrlSequenceNumber);
+            }
+        } catch (Exception e) {
+
+        }
+    }
+
     public void lionKing() throws Exception {
-        int index = 0, k;
         boolean[] isHouseKeeping = new boolean[cheetahHostNumber];
 
         for (int i = 0; i < cheetahHostNumber; i++) {
@@ -124,6 +150,7 @@ public class Lion implements Runnable {
 
         for (;;) {
 
+            /* System is down */
             if (!isActiveLion[0]) {
                 System.out.println("House Keeping -- System not in service");
                 // send shutdown command
@@ -131,42 +158,24 @@ public class Lion implements Runnable {
             }
 
             for (int i = 0; i < cheetahHostNumber; i++) {
-                if (!isActiveByCheetah[i] && !isHouseKeeping[i]) {
+                /* Beep time out server with command type 99 */
+                if (isActiveByCheetah[i] == 3) {
+                    System.out.println("Lion King beep time out Cheetah " + i);
+                    ctrlSequenceNumber--;
+                    sendLionKingCtrlCommand(i, (byte) 99);
+                }
+
+                /* Active secondary node processing if primary node is down */
+                if ((isActiveByCheetah[i] == 0) && !isHouseKeeping[i]) {
                     isHouseKeeping[i] = true;
                     System.out.println("House Keeping -- Cheetah " + i
                             + " down");
                     int hostSeq = (i + cheetahHostNumber - 1)
                             % cheetahHostNumber;
-                    if (isActiveByCheetah[hostSeq]) {
+                    if (isActiveByCheetah[hostSeq] <= 3) {
                         // Active secondary CHEETAH
                         ctrlSequenceNumber--;
-                        try {
-                            Packet packet = new Packet(ctrlSequenceNumber,
-                                    (short) hostSeq, (byte) 100, (byte) 0);
-
-                            for (k = 0; k < cheetahThreadNumber; k++) {
-                                index = (threadHostIndex[hostSeq] + k + 1)
-                                        % cheetahThreadNumber;
-                                if (!lionCache.containsKey(new Integer(hostSeq
-                                        * cheetahThreadNumber + index))) {
-                                    threadHostIndex[hostSeq] = index;
-                                    break;
-                                }
-                            }
-
-                            if (k < cheetahThreadNumber) {
-                                lionCache.put(new Integer(hostSeq
-                                        * cheetahThreadNumber + index), packet);
-                            } else {
-                                System.out
-                                        .println("House keeping BUSYGOSSIP host "
-                                                + hostSeq
-                                                + " seq "
-                                                + ctrlSequenceNumber);
-                            }
-                        } catch (Exception e) {
-
-                        }
+                        sendLionKingCtrlCommand(hostSeq, (byte) 100);
                     } else {
                         System.out
                                 .println("House Keeping -- 2 contagious Cheetah "
@@ -177,6 +186,7 @@ public class Lion implements Runnable {
 
             }
 
+            /* Remove timeout response packet from return buffer */
             for (int i = 0; i < lionThreadNumber; i++) {
                 Packet packet;
 
@@ -212,8 +222,8 @@ public class Lion implements Runnable {
                         ch.pipeline().addLast(
                                 new LionBabyHandler(lionHandleCache, hostId,
                                         threadId, cheetahThreadNumber,
-                                        noReturnCommandCountByCheetah,
-                                        sleepMilliSecond, retryMilliSecond));
+                                        sleepMilliSecond, retryMilliSecond,
+                                        isActiveByCheetah));
                     }
                 });
 
@@ -222,7 +232,7 @@ public class Lion implements Runnable {
                     try {
                         ch = b.connect(hostName, this.port).sync().channel();
                         if (ch != null) {
-                            isActiveByCheetah[this.hostId] = true;
+                            isActiveByCheetah[this.hostId] = 5;
                             break;
                         }
                     } catch (Exception e) {
@@ -245,7 +255,7 @@ public class Lion implements Runnable {
                                 + this.hostId);
                         break RetryLoop;
                     }
-                    if (!isActiveByCheetah[this.hostId]) {
+                    if (isActiveByCheetah[this.hostId] == 0) {
                         workerGroup.shutdownGracefully();
                         System.out.println("Host " + this.hostId
                                 + " not working");
@@ -268,21 +278,13 @@ public class Lion implements Runnable {
                         lionCache.remove(new Integer(this.hostId
                                 * cheetahThreadNumber + this.threadId));
 
-                        commandCountByCheetah[this.hostId]++;
-                        if (commandCountByCheetah[this.hostId] > MAX_USED_INTEGER)
-                            commandCountByCheetah[this.hostId] = 0;
-
-                        noReturnCommandCountByCheetah[this.hostId]++;
-
                     } else {
                         emptyLoop++;
                         Thread.sleep(sleepMilliSecond);
 
                     }
 
-                    if (noReturnCommandCountByCheetah[this.hostId] > 3) {
-                        noReturnCommandCountByCheetah[this.hostId] = 0;
-                        isActiveByCheetah[this.hostId] = false;
+                    if (isActiveByCheetah[this.hostId] == 0) {
                         workerGroup.shutdownGracefully();
 
                         System.out.println("Host " + this.hostId
@@ -338,11 +340,7 @@ public class Lion implements Runnable {
 
         threadHostIndex = new int[cheetahHostNumber];
 
-        commandCountByCheetah = new int[cheetahHostNumber];
-
-        noReturnCommandCountByCheetah = new int[cheetahHostNumber];
-
-        isActiveByCheetah = new boolean[cheetahHostNumber];
+        isActiveByCheetah = new byte[cheetahHostNumber];
 
         retryMilliSecond = Integer.parseInt(env.get("RETRY_MILLISECOND"));
         sleepMilliSecond = Integer.parseInt(env.get("SLEEP_MILLISECOND"));
@@ -356,9 +354,7 @@ public class Lion implements Runnable {
 
         for (int i = 0; i < cheetahHostNumber; i++) {
             threadHostIndex[i] = -1;
-            commandCountByCheetah[i] = 0;
-            noReturnCommandCountByCheetah[i] = 0;
-            isActiveByCheetah[i] = true;
+            isActiveByCheetah[i] = 5;
             requestHostIndex[i] = 0;
 
             String[] portHost = hostArray[i].split("\\@", -1);

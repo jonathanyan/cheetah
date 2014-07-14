@@ -46,10 +46,11 @@ public class Packet {
 
     }
 
-    public Packet(int sequenceNumber, short hostId, String string) {
+    public Packet(int sequenceNumber, short hostId, byte commandType,
+            String string) {
         this.sequenceNumber = sequenceNumber;
         this.hostId = hostId;
-        this.commandType = 0;
+        this.commandType = commandType;
         if (string.length() > BUFFERLENGTH) {
             this.commandLength = (byte) -1;
             return;
@@ -71,7 +72,7 @@ public class Packet {
         this.hostId = b.readShort();
         this.commandType = b.readByte();
         this.commandLength = b.readByte();
-        
+
         for (int i = 0; i < this.commandLength; i++)
             this.byteBuf[i] = b.readByte();
 

@@ -36,7 +36,7 @@ public class LionQueenHandler extends SimpleChannelInboundHandler<Object> {
     private static NonBlockingHashMap<Integer, Packet> lionCache;
     private static NonBlockingHashMap<Integer, Packet> lionHandleCache;
     private static int[] threadHostIndex;
-    private static boolean[] isActiveByCheetah;
+    private static byte[] isActiveByCheetah;
     private static boolean[] isActiveLion;
     private static int[][] requestTimeStamp;
     private static int[] requestHostIndex;
@@ -51,7 +51,7 @@ public class LionQueenHandler extends SimpleChannelInboundHandler<Object> {
             int cheetahHostNumber_s,
             NonBlockingHashMap<Integer, Packet> lionCache_s,
             NonBlockingHashMap<Integer, Packet> lionHandleCache_s,
-            int[] threadHostIndex_s, boolean[] isActiveByCheetah_s,
+            int[] threadHostIndex_s, byte[] isActiveByCheetah_s,
             boolean[] isActiveLion_s, int[][] requestTimeStamp_s,
             int[] requestHostIndex_s, int retryMilliSecond_s,
             int sleepMilliSecond, int requestTimeLowerLimit_s) {
@@ -67,7 +67,7 @@ public class LionQueenHandler extends SimpleChannelInboundHandler<Object> {
         requestHostIndex = requestHostIndex_s;
         retryMilliSecond = retryMilliSecond_s;
         this.sleepMilliSecond = sleepMilliSecond;
-        requestTimeLowerLimit =requestTimeLowerLimit_s;
+        requestTimeLowerLimit = requestTimeLowerLimit_s;
     }
 
     @Override
@@ -104,16 +104,21 @@ public class LionQueenHandler extends SimpleChannelInboundHandler<Object> {
                     cheetahHostNumber);
             int originalHostSeq = hostSeq;
 
-            if (!isActiveByCheetah[hostSeq]) {
+            if (0 == isActiveByCheetah[hostSeq]) {
                 hostSeq = (hostSeq + cheetahHostNumber - 1) % cheetahHostNumber;
                 System.out.println("HOST status first (" + originalHostSeq
                         + " - " + isActiveByCheetah[originalHostSeq]
                         + ") second (" + hostSeq + " - "
                         + isActiveByCheetah[hostSeq] + ")");
-                if (!isActiveByCheetah[hostSeq]) {
+                if (0 == isActiveByCheetah[hostSeq]) {
                     System.out.println("Server first and second both down!!!");
                     return -1;
                 }
+            } else if (3 == isActiveByCheetah[hostSeq]) {
+                System.out.println("Cheetah host " + hostSeq
+                        + " busy. Retry in 20 seconds...");
+                return -2;
+
             }
 
             int nRequestTime = (int) ((this.beginTime - requestTimeStamp[hostSeq][requestHostIndex[hostSeq]]) % MAX_USED_INTEGER);
@@ -174,11 +179,8 @@ public class LionQueenHandler extends SimpleChannelInboundHandler<Object> {
                             + httpSequenceNumber + " seq  "
                             + packet.sequenceNumber);
                 if (httpSequenceNumber == packet.sequenceNumber) {
-                    System.out
-                            .print("LionQueenHandler - Response : buf_index "
-                                    + index
-                                    + " seq  "
-                                    + packet.sequenceNumber);
+                    System.out.print("LionQueenHandler - Response : buf_index "
+                            + index + " seq  " + packet.sequenceNumber);
                     buf.append("RESPONSE: " + packet.byteToString());
                     buf.append("\r\n");
 
@@ -196,13 +198,15 @@ public class LionQueenHandler extends SimpleChannelInboundHandler<Object> {
                 iloop = 0;
                 index = hostSeq * cheetahThreadNumber;
                 retry++;
-                if (retry < retryMilliSecond/sleepMilliSecond) {
+                if (retry < retryMilliSecond / sleepMilliSecond) {
                     continue;
                 } else {
+                    isActiveByCheetah[hostSeq] = 3;
                     System.out.print("Response Time out at host " + hostSeq
                             + " seq  " + httpSequenceNumber + " retry number "
-                            + retry + " " + retryMilliSecond + " " + sleepMilliSecond) ;
-                    buf.append("Response Time out at seq  "
+                            + retry + " " + retryMilliSecond + " "
+                            + sleepMilliSecond);
+                    buf.append("99888 - Response Time out at seq  "
                             + httpSequenceNumber + (sequenceNumber - 1));
                     buf.append("\r\n");
                     break;
@@ -235,11 +239,13 @@ public class LionQueenHandler extends SimpleChannelInboundHandler<Object> {
                 }
             } else if (hostSeq < 0) {
                 if (hostSeq == -5) {
-                    buf.append("System down ");
+                    buf.append("99999 - System down ");
+                } else if (hostSeq == -2) {
+                    buf.append("99998 - Cheetah host busy, retry in 20 seconds ... ");
                 } else if (hostSeq == -3) {
-                    buf.append("Cheetah server busy, retry after a few seconds ... ");
+                    buf.append("99997 - Cheetah request jam, retry in a few seconds ... ");
                 } else {
-                    buf.append("Lion server busy, retry after a few seconds ... ");
+                    buf.append("99996 - Lion server busy, retry after a few seconds ... ");
                 }
                 buf.append("\r\n");
 
