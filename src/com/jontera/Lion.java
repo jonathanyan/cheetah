@@ -143,6 +143,7 @@ public class Lion implements Runnable {
 
     public void lionKing() throws Exception {
         boolean[] isHouseKeeping = new boolean[cheetahHostNumber];
+        int timeOutHostId = -1;
 
         for (int i = 0; i < cheetahHostNumber; i++) {
             isHouseKeeping[i] = false;
@@ -157,14 +158,19 @@ public class Lion implements Runnable {
                 break;
             }
 
+            timeOutHostId = -1;
             for (int i = 0; i < cheetahHostNumber; i++) {
                 /* Beep time out server with command type 99 */
                 if (isActiveByCheetah[i] == 3) {
+                    timeOutHostId = i;
                     System.out.println("Lion King beep time out Cheetah " + i);
                     ctrlSequenceNumber--;
                     sendLionKingCtrlCommand(i, (byte) 99);
+                    break;
                 }
+            }
 
+            for (int i = 0; i < cheetahHostNumber; i++) {
                 /* Active secondary node processing if primary node is down */
                 if ((isActiveByCheetah[i] == 0) && !isHouseKeeping[i]) {
                     isHouseKeeping[i] = true;
@@ -203,6 +209,13 @@ public class Lion implements Runnable {
 
             }
             Thread.sleep(retryMilliSecond);
+            if (timeOutHostId >= 0) {
+                if (isActiveByCheetah[timeOutHostId] == 3) {
+                    isActiveByCheetah[timeOutHostId] = 0;
+                    System.out.println("Lion King beep no return from "
+                            + timeOutHostId);
+                }
+            }
         }
     }
 

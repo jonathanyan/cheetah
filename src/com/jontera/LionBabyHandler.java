@@ -55,7 +55,7 @@ public class LionBabyHandler extends ChannelInboundHandlerAdapter {
         in.release();
 
         if (packet.commandType == 99) {
-            isActiveByCheetah[packet.hostId] = 0;
+            isActiveByCheetah[packet.hostId] = 5;
             return;
         }
         final int index = this.hostId * this.cheetahThreadNumber
