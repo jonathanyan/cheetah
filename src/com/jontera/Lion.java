@@ -178,7 +178,7 @@ public class Lion implements Runnable {
                             + " down");
                     int hostSeq = (i + cheetahHostNumber - 1)
                             % cheetahHostNumber;
-                    if (isActiveByCheetah[hostSeq] <= 3) {
+                    if (isActiveByCheetah[hostSeq] == 5 ) {
                         // Active secondary CHEETAH
                         ctrlSequenceNumber--;
                         sendLionKingCtrlCommand(hostSeq, (byte) 100);
