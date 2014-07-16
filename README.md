@@ -6,3 +6,8 @@ Cheetah is a distributed in-memory dual-active application engine. It attempts t
 
 Cheetah loads all data in memory with duplication mode, and is able to work well even a couple of non-contagious nodes are down.
 
+Start Single Node
+=======
+$ compile
+$ start
+
