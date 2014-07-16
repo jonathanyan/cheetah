@@ -132,7 +132,7 @@ Start multiple node
 
    RESPONSE: getDemand = 5723
 
-7 Stop cheetah and lion one by one 
+7. Stop cheetah and lion one by one 
 
    For Cheetah,
 
