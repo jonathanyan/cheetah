@@ -20,7 +20,7 @@ For Lion node, there are 3 roles - thread groups
 
 1. Lion Queen - Prcessing http requirement
 
-2. Lion Baby - Communcate between Lion node and Cheetah nodes
+2. Lion Baby - Communicate between Lion node and Cheetah nodes
 
 3. Lion King - Monitor cheetah healthy status
 
@@ -96,7 +96,7 @@ Start multiple node
 
    export CHEETAH_HOST=8000@153.65.191.151:8000@153.65.191.152:8000@153.65.191.153
 
-   The format is node list with (port_number@host_address) seperated by ":"
+   The format is cheetah host list with (port_number@host_address) seperated by ":"
 
    This "CHEETAH_HOST" configuration is for cheetah host only. Lion host is current machine, not need to be configured.
  
