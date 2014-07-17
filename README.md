@@ -8,7 +8,7 @@ Cheetah loads all data in memory with duplication mode, and is able to work well
 
 Here is Cheetah design chart link
 
-https://github.com/jonathanyan/cheetah/blob/master/html/cheetah_dualactive2.JPG
+https://github.com/jonathanyan/cheetah/blob/master/html/cheetah_dualactive.jpg
 
 Basically, there are 2 kinds of nodes
 
