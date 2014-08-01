@@ -143,5 +143,8 @@ Start multiple node
    For Lion,
 
    ~$ cd cheetah-master/sbin; ./stop_thisnode.sh
+   
+   
+Any question, contact me at jontera@gmail.com
 
 
