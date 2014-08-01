@@ -40,6 +40,8 @@ Prerequisite
 
 5. (Optional for test) Install wget at Linux node
 
+   At step #3 and #4 jar files can also be downloaded from https://github.com/jonathanyan/cheetahlib
+
 Start single node
 
 1. Download cheetah package by clicking "Download Zip" from https://github.com/jonathanyan/cheetah
